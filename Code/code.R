@@ -100,7 +100,12 @@ head(prob.surv)
 # Adding the predictions for new data to the plot
 lines(survfit(coxmodel, newdata=items.new))
 
-
+# Change Survival to probability of purchase
+#prob.purchase <- apply(prob.surv, 1, function(x) 1-x)
+prob.purchase <- data.frame(matrix(nrow = NROW(prob.surv), ncol = NCOL(prob.surv)))
+for (x in 2:NCOL(prob.purchase)) {
+  prob.purchase[,x] <- (1 - prob.surv[,x]) - (1 - prob.surv[,x-1])
+}
 
 #------------------------------------------------------------------
 # Model selection and prediction
