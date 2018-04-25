@@ -36,3 +36,4 @@ prices.ts.tr <- prices.ts[prices.ts$date <= "2018-01-31",]
 
 
 
+
