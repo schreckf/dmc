@@ -17,6 +17,8 @@ library("survival")
 library("pec")
 #install.packages("rstudioapi") # allows adaptive working directory 
 library("rstudioapi")
+#install.packages("dplyr") # handles data for feature engineering
+library("dplyr")
 
 # (Flexible) working directory
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) # uses package rstudioapi
@@ -48,6 +50,12 @@ items.new <- merge(x = items, y=prices, by.x = c("pid", "size"), by.y = c("pid",
 train.new$time <- round(difftime(strptime(train.new$date, format = "%Y-%m-%d"),
                         strptime(train.new$releaseDate, format = "%Y-%m-%d"),units= "days"),digits = 0)
 train.new$time <- as.integer(train.new$time)
+
+# Variable giving the days since last purchase date (not ready yet)
+str(train.new)
+train.new[,c(1,2,3,12)] %>%
+  group_by(pid, size) %>%
+  mutate(Diff =  c(NA,ifelse(is.na(diff(date)), date - releaseDate, diff(date))))
 
 # Event-variable, needed for survival analysis (1 for all cases)
 train.new$event <- rep(1, NROW(train.new))
@@ -92,7 +100,12 @@ head(prob.surv)
 # Adding the predictions for new data to the plot
 lines(survfit(coxmodel, newdata=items.new))
 
-
+# Change Survival to probability of purchase
+#prob.purchase <- apply(prob.surv, 1, function(x) 1-x)
+prob.purchase <- data.frame(matrix(nrow = NROW(prob.surv), ncol = NCOL(prob.surv)))
+for (x in 2:NCOL(prob.purchase)) {
+  prob.purchase[,x] <- (1 - prob.surv[,x]) - (1 - prob.surv[,x-1])
+}
 
 #------------------------------------------------------------------
 # Model selection and prediction
