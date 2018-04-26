@@ -31,10 +31,11 @@ train <- read.csv(file = "../Data/train.csv", sep = "|")
 # In order to have some more features in training dataset,
 # connecting training dataset with features from items dataset and prices dataset (in 2 steps)
 train.new <- merge(x = train, y=items, by.x = c("pid", "size"), by.y = c("pid", "size"))
-train.new <- merge(x = train.new, y = prices, by.x = c("pid", "size"), by.y = c("pid", "size"))
+#train.new <- merge(x = train.new, y = prices, by.x = c("pid", "size"), by.y = c("pid", "size"))
+train.new <- subset(train.new, select = -stock) # this information does not apply on training data
 
 # Furthermore connect the items data with the price data
-items.new <- merge(x = items, y=prices, by.x = c("pid", "size"), by.y = c("pid", "size"))
+#items.new <- merge(x = items, y=prices, by.x = c("pid", "size"), by.y = c("pid", "size"))
 
 
 #------------------------------------------------------------------
