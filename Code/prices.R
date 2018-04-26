@@ -9,6 +9,7 @@ library(rugarch)
 library(data.table)
 library(zoo)
 library(ggplot2)
+library(xts)
 
 #Create a sequence of dates from 2017-10-01 to 2018-02-28---------
 my.Dates <- seq(as.Date("2017/10/01"), as.Date("2018/02/28"), by = "day")
@@ -32,8 +33,9 @@ str(prices.ts)
 #FIlter out the February prices
 prices.ts.tr <- prices.ts[prices.ts$date <= "2018-01-31",]
 
-
-
+#turn prices into time series
+prices.xts <- xts(prices.ts, order.by = prices.ts$date)
+head(prices.xts[,10834])
 
 
 
