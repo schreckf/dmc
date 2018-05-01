@@ -51,7 +51,8 @@ train.new$id <- cumsum(!duplicated(train.new[c("pid", "size")]))
 # Generate Panel ID-variable, time-variable and purchase variable
 panel.id <- matrix(t(matrix(data = rep(unique(train.new$id), NROW(my.Dates)), ncol = NROW(my.Dates))), ncol = 1)
 panel.time <- rep(my.Dates, max(train.new$id))
-panel.purchases <- rep(0, NROW(panel.time))
+panel.purchases <- rep(0, NROW(panel.time)) # PROBLEM: for some we dont have data from the start--> better NA instead of 0
+# AND: from first of february on we dont know purchases--> NA
 
 panel <- cbind.data.frame(panel.purchases, panel.id, panel.time)
 
@@ -59,6 +60,15 @@ panel <- cbind.data.frame(panel.purchases, panel.id, panel.time)
 for (i in 1:NROW(train.new)) {
   panel[panel$panel.id == train.new[i, "id"] & panel$panel.time == as.Date(train.new[i, "date"]),]$panel.purchases <- train.new[i,]$units
 }
+
+# Set NA if time is before release date of product
+panel$panel.releaseDate <- as.Date(rep(NA, NROW(panel.time)))
+for (i in unique(panel$panel.id)) {
+  panel[panel$panel.id == i, "panel.releaseDate"] <- train.new[train.new$id == i, "releaseDate"][1]
+}
+panel[(panel$panel.time < panel$panel.releaseDate) == TRUE, ]$panel.purchases <- NA
+
+
 
 # Bring price variable into panel structure
 panel$panel.price <- rep(NA, NROW(panel.time))
@@ -139,4 +149,38 @@ phtest(random, fixed) # -->random effects model probably best
 
 ### Prediction with predict-function on testing data
 ...
+
+
+######################################################################
+
+# Multiple auto-ARIMAs (using only time, price and google data)
+
+# First: generate individual time series data structure 
+data.list <- list()
+for (i in unique(panel$panel.id)) {
+  data.list[[i]] <- panel[panel$panel.id == i,]
+}
+# Drop all cases where panel.time < releaseDate
+for (i in unique(panel$panel.id)) {
+  data.list[[i]] <- data.list[[i]][!is.na(data.list[[i]]$panel.purchases), ]
+}
+
+
+# Second: Model building
+...
+
+
+######################################################################
+
+# Multiple zero-inflated Poisson time series
+
+library("ZIM") # for zero-inflated models
+
+
+
+
+
+
+
+
 
