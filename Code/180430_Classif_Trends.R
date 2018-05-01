@@ -100,3 +100,6 @@ ggplot(data_for, aes(Date, Quantity, color = Type)) +
   facet_zoom(x = Date %in% data_test$selling.date, zoom.size = 1.2) +
   labs(title = "Forecast from RPART") +
   theme_ts
+
+mse <- mean((data_test$quantity - predict(tree_2, newdata = data_test))^2)
+mse
