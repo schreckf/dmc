@@ -1,4 +1,10 @@
-setwd("C:/Users/Gerome/Desktop/DMC 2018")
+#setwd("C:/Users/Gerome/Desktop/DMC 2018")
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) 
+
+#install.packages("feather")
+#install.packages("forecast")
+#install.packages("ggforce")
+#install.packages("tabplot")
 
 library(feather) # data import
 library(data.table) # data handle
@@ -31,7 +37,9 @@ theme_ts <- theme(panel.border = element_rect(fill = NA,
                   legend.key = element_rect(fill = "white"))
 
 
-data <- read.csv("Test_Frame.csv")
+
+#data <- read.csv("Test_Frame.csv")
+data <- read.csv(file = "../Data/Test_Frame.csv")
 
 data$selling.date <- as.Date(data$selling.date)
 data <- as.data.table(data)
