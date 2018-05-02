@@ -18,24 +18,28 @@ my.Dates <- seq(as.Date("2017/10/01"), as.Date("2018/02/28"), by = "day")
 colnames(prices)[-c(1,2)] <- as.character(my.Dates)
 
 #Put date vavriables into the rows of the prices dataframe 
-prices.ts <- melt(prices, id.vars = c("pid", "size"))
-colnames(prices.ts)[colnames(prices.ts)=="variable"] <- "date"
-colnames(prices.ts)[colnames(prices.ts)=="value"] <- "price"
+prices <- melt(prices, id.vars = c("pid", "size"))
+colnames(prices)[colnames(prices)=="variable"] <- "date"
+colnames(prices)[colnames(prices)=="value"] <- "price"
 
 #Convert column into date format
-prices.ts$date <- as.Date(prices.ts$date)
+prices$date <- as.Date(prices$date)
 
 #Rearrange dataframe so dates are on the rows, each item is its own variable 
 #and prices for each item are shown over time
-prices.ts <- dcast(prices.ts, date ~ pid + size, value.var = "price")
-str(prices.ts)
+prices <- dcast(prices, date ~ pid + size, value.var = "price")
+str(prices)
 
 #FIlter out the February prices
-prices.ts.tr <- prices.ts[prices.ts$date <= "2018-01-31",]
+prices.ts <- prices[prices$date <= "2018-01-31",]
 
-#turn prices into time series
-prices.xts <- xts(prices.ts, order.by = prices.ts$date)
-head(prices.xts[,10834])
+#Turn price data back to long form
+prices.ts <- melt(prices.ts, id= "date")
+prices.ts <- prices.ts %>%
+  separate(variable, c("pid", "size"), "_") 
+
+colnames(prices.ts) <- c("date", "pid", "size", "price")
+
 
 
 
