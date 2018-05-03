@@ -5,6 +5,7 @@ library(zoo)
 library(ggplot2)
 library(xts)
 library(forecast)
+library(forcats)
 
 
 data = read.csv(file = "train.csv",header = TRUE, sep = "|")
@@ -63,8 +64,23 @@ summary(data.ts$size)
 items <- as.data.table(items)
 setkey(items, "pid", "size", "color", "brand", "rrp", "mainCategory", "category", "subCategory")
 
+data.ts <- as.data.table(data.ts)
+setkey(data.ts, "pid", "size", "color", "brand", "rrp", "mainCategory", "category", "subCategory")
+
+items.k <- data.ts[,sum(sales, na.rm = TRUE), by = "size"]
 items.sizes <- items[!duplicated(items$size), c("size", "brand", "mainCategory", "category", "subCategory")]
 
+levels(data.ts$size)
+data.ts$size <- fct_collapse(data.ts$size, 
+             "L" = c("L ( 152-158 )", "L ( 40/42 )", "L ( 42-46 )", "L ( 42-47 )", "L ( 44 )", 
+                     "L (43 - 46)", "L/K", "L/T", "L/XL ( 39-47 )", "YLG 147,5-157,5", "7 ( L )"),
+             "M" = c("M ( 140-152 )", "M ( 38-42 )", "M ( 38/40 )", "M ( 40 )", "M (38 - 42)", "M/L", 
+                     "YM 135-147,5", "YSM 125-135"),
+             "S" = c("S ( 128-140 )", "S ( 34-38 )", "S ( 34/36 )", "S ( 36 )"),
+             "XL" = c("XL ( 158-170 )", "XL ( 44/46 )", "XL (46-48,5)", "XL (46-50 )","XL/T",
+                      "YXL 157,5-167,5", "8", "8 ( XL )", "8", "8 ( XL )"  ),
+             "XS" = c("XS ( 116-128 )", "XS ( 30-34 )", "XS ( 32 )", "XS ( 32/34 )","XS/S"), 
+             "XXL" = c("9", "2XL", "2XL/T"))
 
 #Turn into time series object
 data.xts <- xts(data.ts[,-1], order.by = data.ts$date)
