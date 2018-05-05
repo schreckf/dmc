@@ -12,6 +12,74 @@ data = read.csv(file = "train.csv",header = TRUE, sep = "|")
 items = read.csv(file = "items.csv",header = TRUE, sep = "|")
 prices = read.csv(file = "prices.csv", header = TRUE, sep = "|")
 
+####### Missing Value Imputation --------- by Batuhan (if you are convinced of this imputation, let me know)
+###### items
+#### Notes:
+### NAs exist only in subCategory column
+### NAs exist only when mainCategory == 15
+### mC = 15 has only 4 categories {16, 24, 30, 33} which do not exist under other mC's
+### There are only 3 levels of mC, {1,9,15}
+
+## Interaction across mainCategories is a very RARE event! 
+## Only mC_9 and mC_1 have just one common category which is c_37
+## Interaction is also weak amongst categories. 
+## They usually do not have common subCategories if they belong to the same mainCategory. 
+## Even if they belong to the same mainCategory, they usually have different subCategories. 
+## The only exceptions I spotted are; c_37 ∩ c_36 = sC_32; mC_1 ∩ mC_9 = sC_37; c_2 ∩ c_37 = {sC_3, sC_6, sC_39}
+## That means we won't lose so much information when we cluster them (even when we merge columns brutally)
+
+## Imputation strategy:
+## We should not impute NAs with other subCategories that exist under other categories
+## because 1) Their categories (c_16, c_24, c_30, c_33) do not exist elsewhere,
+## 2) subCategories do very rarely exist under other categories
+## We should divide the products in groups when category == 15, and assign them new subCategories
+## We should not give all NAs the same value, since under other mainCategories categories have usually subCategories that are different from each other.
+## So, the strategy is to cluster products when category == 15 according to their rrp, stock, and brand. 
+
+c15 <- subset(items, mainCategory == 15)
+c15 <- c15[,c(4,5,7,9)]
+c15$category <- as.factor(c15$category)
+c15$stock <- as.numeric(c15$stock)
+c15$rrp <- as.numeric(c15$rrp)
+set.seed(20)
+
+library(cluster) 
+library(dplyr)
+library(forcats)
+
+# Calculating Gower Distance
+gower_dist <- daisy(c15,
+                    metric = "gower",
+                    type = list(logratio = 3))
+# Calculating Silhouette Width to choose the optimal cluster by elbow method
+sil_width <- c(NA)
+for(i in 2:10){
+  
+  pam_fit <- pam(gower_dist,
+                 diss = TRUE,
+                 k = i)
+  
+  sil_width[i] <- pam_fit$silinfo$avg.width
+  
+}
+plot(1:10, sil_width,
+     xlab = "Number of clusters",
+     ylab = "Silhouette Width")
+lines(1:10, sil_width)
+
+# k = 10 clusters give the highest value
+# However, I find 3 is more feasible since we will consider them as profoundly new subCategories
+
+pam_fit <- pam(gower_dist, diss = TRUE, k = 3)
+
+c15 <- c15[,-c(4,5)]
+c15 <- cbind(c15, cluster = pam_fit$clustering + 44)
+
+items$subCategory[which(is.na(items$subCategory))] <- c15$cluster
+
+items$subCategory <- as.factor(items$subCategory)
+#---end---
+
 #Turn items release date to date and other columns to factors
 items[c("pid", "mainCategory", "category", "subCategory")] <- lapply(items[c("pid", "mainCategory", "category", "subCategory")], factor)
 items["releaseDate"] <- as.Date(items$releaseDate)
