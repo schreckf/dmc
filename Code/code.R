@@ -52,11 +52,13 @@ train.new$time <- round(difftime(strptime(train.new$date, format = "%Y-%m-%d"),
                         strptime(train.new$releaseDate, format = "%Y-%m-%d"),units= "days"),digits = 0)
 train.new$time <- as.integer(train.new$time)
 
-# Variable giving the days since last purchase date (not ready yet)
-str(train.new)
-train.new[,c(1,2,3,12)] %>%
-  group_by(pid, size) %>%
-  mutate(Diff =  c(NA,ifelse(is.na(diff(date)), date - releaseDate, diff(date))))
+# Variable giving the days since last purchase date
+
+train.new <- merge(train.new, 
+                   train.new[order(train.new$date),c(1,2,3)] %>%
+                     group_by(pid, size) %>%
+                     mutate(time_last =  c(NA, diff(date))),
+              by = c("pid", "size","date"))
 
 # Event-variable, needed for survival analysis (1 for all cases)
 train.new$event <- rep(1, NROW(train.new))
