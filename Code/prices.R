@@ -11,6 +11,16 @@ library(zoo)
 library(ggplot2)
 library(xts)
 
+#Missing value imputation by auto.arima & Kalman Filter. It takes some time.
+
+prices_only <- prices[,-c(1,2)]
+
+for(i in rownames(prices_only)){
+  prices_only[i,] <- na.kalman(as.numeric(prices_only[i,]), model = "auto.arima")
+}
+
+prices <- cbind(prices[,c(1,2)], prices_only)
+
 #Create a sequence of dates from 2017-10-01 to 2018-02-28---------
 my.Dates <- seq(as.Date("2017/10/01"), as.Date("2018/02/28"), by = "day")
 
