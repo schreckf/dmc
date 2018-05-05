@@ -12,7 +12,7 @@ data = read.csv(file = "train.csv",header = TRUE, sep = "|")
 items = read.csv(file = "items.csv",header = TRUE, sep = "|")
 prices = read.csv(file = "prices.csv", header = TRUE, sep = "|")
 
-####### Missing Value Imputation --------- by Batuhan (if you are convinced of this imputation, let me know)
+####### Missing Value Imputation --------- by Batuhan (if you are not so convinced of this imputation, let me know)
 ###### items
 #### Notes:
 ### NAs exist only in subCategory column
