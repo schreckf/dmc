@@ -1,4 +1,5 @@
-library(rstudioapi)
+###Run prices.r first
+
 library(rugarch)
 library(data.table)
 library(zoo)
@@ -8,18 +9,26 @@ library(forecast)
 library(forcats)
 
 
-data = read.csv(file = "train.csv",header = TRUE, sep = "|")
-items = read.csv(file = "items.csv",header = TRUE, sep = "|")
-prices = read.csv(file = "prices.csv", header = TRUE, sep = "|")
-
 #Turn items release date to date and other columns to factors
-items[c("pid", "mainCategory", "category", "subCategory")] <- lapply(items[c("pid", "mainCategory", "category", "subCategory")], factor)
-items["releaseDate"] <- as.Date(items$releaseDate)
+items[,c("pid", "mainCategory", "category", "subCategory")] <- lapply(items[,c("pid", "mainCategory", "category", "subCategory")], factor)
+items[,"releaseDate"] <- as.Date(items$releaseDate)
 str(items)
 
 #Convert column into date format
-data$date <- as.Date(data$date)
+str(data)
+data$date <- as.Date(data$date, '%Y-%m-%d')
 
+#TUrn pid to factor
+data$pid <- as.factor(data$pid)
+
+
+#Add prices to train data------
+data <- merge(data, prices, by.x = c("date", "pid", "size"), by.y = c("date", "pid", "size"))
+data <- merge(data, items, by.x = c("pid", "size"), by.y = c("pid", "size"))
+str(data)
+summary(data)
+
+#####Converting tall format to wide format for time series------
 #Put date vavriables into the rows of the train dataframe 
 data.ts <- dcast(data, date ~ pid + size, value.var = "units")
 str(data.ts)
@@ -34,45 +43,34 @@ colnames(releaseDate.check) <- c("pid_size", "releaseDate")
 str(releaseDate.check)
 head(releaseDate.check)
 
-
+  
 for (i in 2:12825) {
-  a <- data.ts[,c(1,i)]
-a[,2] <- ifelse(a$date < releaseDate.check$releaseDate[i-1], NA, a[,2])
-data.ts[,i] <- a[,2]
+      a <- data.ts[,c(1,i)]
+    a[,2] <- ifelse(a$date < releaseDate.check$releaseDate[i-1], NA, a[,2])
+    data.ts[,i] <- a[,2]
 }
 
-##Turn data back to long format
-data.ts <- melt(data.ts, id= "date")
 
-data.ts <- data.ts %>%
-separate(variable, c("pid", "size"), "_")  
-colnames(data.ts) <- c("date", "pid", "size", "sales")
+####Auto.arima model
+#ARIMA model
+#Create test and validation set
+data.ts.tr <- data.ts[data.ts$date <= as.Date("2017-12-31"), ]
+data.ts.tr <- data.ts.tr[, !apply(is.na(data.ts.tr), 2, all)]
 
-#Add prices to train data
-data.ts <- merge(data.ts, prices.ts, by.x = c("date", "pid", "size"), by.y = c("date", "pid", "size"))
-data.ts <- merge(data.ts, items, by.x = c("pid", "size"), by.y = c("pid", "size"))
+data.ts.val <- data.ts[data.ts$date >= as.Date("2018-01-01"),]
+data.ts.val <- data.ts.val[, colnames(data.ts.tr)]
 
-str(data.ts)
+data.xts.tr <- xts(data.ts.tr[,-1], order.by = data.ts.tr$date)
+data.xts.val <- xts(data.ts.val[,-1], order.by = data.ts.val$date)
 
-data.ts$pid <- as.factor(data.ts$pid)
-data.ts$size <- as.factor(data.ts$size)
 
-summary(data.ts)
-summary(data.ts$size)
+fit <- lapply(data.xts.tr, function(x) forecast(auto.arima(x), h = 31))
+
+result.ts <- mapply(FUN=accuracy,f=fit,x=data.xts.val,SIMPLIFY=FALSE)
 
 ####Try to collapse size variable
-items <- as.data.table(items)
-setkey(items, "pid", "size", "color", "brand", "rrp", "mainCategory", "category", "subCategory")
-
-data.ts <- as.data.table(data.ts)
-setkey(data.ts, "pid", "size", "color", "brand", "rrp", "mainCategory", "category", "subCategory")
-
-
-items.k <- data.ts[,sum(sales, na.rm = TRUE), by = "size"]
-items.sizes <- items[!duplicated(items$size), c("size", "brand", "mainCategory", "category", "subCategory")]
-
-levels(data.ts$size)
-data.ts$size <- fct_collapse(data.ts$size, 
+levels(data$size)
+data$size <- fct_collapse(data$size, 
              "L" = c("L ( 152-158 )", "L ( 40/42 )", "L ( 42-46 )", "L ( 42-47 )", "L ( 44 )", 
                      "L (43 - 46)", "L/K", "L/T", "L/XL ( 39-47 )", "YLG 147,5-157,5", "7 ( L )",
                      "140", "1 ( 140 )", "10 (140)", "10/12 (140-152)", "140/152", "146", "2 ( 152 )",
@@ -93,7 +91,7 @@ data.ts$size <- fct_collapse(data.ts$size,
              "XS" = c("XS ( 116-128 )", "XS ( 30-34 )", "XS ( 32 )", "XS ( 32/34 )","XS/S", "0 ( 31-33 )",
                       "0 ( Bambini )", "00 ( 27-30 )", "1 ( 25-30 )", "116", "116-122", "116/128", "2 ( 31-34 )",
                       "6/8 (116-128)"), 
-             "XXL" = c("9", "2XL", "2XL/T", "28 (3XL)", "XXL", "30 (5XL)", "3XL", "3XL/T", "4XL", "176",
+             "XXL" = c("9", "2XL", "2XL/T", "28 (3XL)", "30 (5XL)", "3XL", "3XL/T", "4XL", "176",
                        "16 (176)", "7"),
              "<40" = c("29", "30", "31", "31,5", "32", "33", "33,5", "34", "35", "35,5", "36", "36 2/3", 
                        "36,5", "37", "37 1/3", "37,5", "38", "38 2/3", "38,5", "39", "39 1/3", "39,5", ""),
@@ -106,6 +104,32 @@ data.ts$size <- fct_collapse(data.ts$size,
              "46" = c("46", "46 2/3", "46,5"),
              ">47" = c("47", "47 1/3", "47,5", "48", "48 2/3", "48,5"))
 
+#New discount variable
+data$discount <- ((data$rrp - data$price)/data$rrp) * 100
+
+
+
+
+
+#####Playground
+
+items <- as.data.table(items)
+setkey(items, "pid", "size", "color", "brand", "rrp", "mainCategory", "category", "subCategory")
+
+data.ts <- as.data.table(data.ts)
+setkey(data.ts, "pid", "size", "color", "brand", "rrp", "mainCategory", "category", "subCategory")
+
+
+items.k <- data.ts[,sum(units, na.rm = TRUE), by = "size"]
+items.sizes <- items[!duplicated(items$size), c("size", "brand", "mainCategory", "category", "subCategory")]
+
+adidas <- data.ts[data.ts$brand == "adidas", sum(units), by = "date" ]
+adidas <- adidas[order(adidas$date),]
+plot(adidas, type = "l")
+adidas.ts <- ts(adidas[,2])
+adidas.ts
+a<-ma(adidas.ts, order = 10)
+a
 #Turn into time series object
 data.xts <- xts(data.ts[,-1], order.by = data.ts$date)
 str(data.xts)

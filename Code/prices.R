@@ -1,3 +1,4 @@
+library(rstudioapi)
 # (Flexible) working directory
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) # uses package rstudioapi
 
@@ -10,9 +11,11 @@ library(data.table)
 library(zoo)
 library(ggplot2)
 library(xts)
+library(dplyr)
+library(tidyr)
 
 #Create a sequence of dates from 2017-10-01 to 2018-02-28---------
-my.Dates <- seq(as.Date("2017/10/01"), as.Date("2018/02/28"), by = "day")
+my.Dates <- seq(as.Date("2017-10-01"), as.Date("2018-02-28"), by = "day")
 
 #CHange colnames of prices dataframe to dates
 colnames(prices)[-c(1,2)] <- as.character(my.Dates)
@@ -22,23 +25,20 @@ prices <- melt(prices, id.vars = c("pid", "size"))
 colnames(prices)[colnames(prices)=="variable"] <- "date"
 colnames(prices)[colnames(prices)=="value"] <- "price"
 
+
 #Convert column into date format
-prices$date <- as.Date(prices$date)
+prices$date <- as.character(prices$date)
+prices$date <- as.Date(prices$date, format = "%Y-%m-%d")
+
+#Convert PID to factor
+prices$pid <- as.factor(prices$pid)
+str(prices$date)
 
 #Rearrange dataframe so dates are on the rows, each item is its own variable 
 #and prices for each item are shown over time
-prices <- dcast(prices, date ~ pid + size, value.var = "price")
-str(prices)
+prices.ts <- dcast(prices, date ~ pid + size, value.var = "price")
+str(prices.ts)
 
-#FIlter out the February prices
-prices.ts <- prices[prices$date <= "2018-01-31",]
-
-#Turn price data back to long form
-prices.ts <- melt(prices.ts, id= "date")
-prices.ts <- prices.ts %>%
-  separate(variable, c("pid", "size"), "_") 
-
-colnames(prices.ts) <- c("date", "pid", "size", "price")
 
 
 
