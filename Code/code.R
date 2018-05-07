@@ -50,7 +50,6 @@ train.new <- subset(train.new, select = -stock) # this information does not appl
 # Variable giving the days until purchase from release date
 train.new$time <- round(difftime(strptime(train.new$date, format = "%Y-%m-%d"),
                         strptime(train.new$releaseDate, format = "%Y-%m-%d"),units= "days"),digits = 0)
-train.new$time <- as.integer(train.new$time)
 
 # Variable giving the days since last purchase date
 

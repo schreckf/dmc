@@ -1,8 +1,8 @@
 ### Survival analysis: Cox proportional hazard model 
 
-# Event-variable, needed for survival analysis (1 for all cases)
+# Event-variable and time variable
 train.new$event <- rep(1, NROW(train.new))
-
+train.new$time <- as.integer(train.new$time_last)
 
 # Model
 coxmodel <- coxph(Surv(time, event) ~ color + rrp + brand + category, 
