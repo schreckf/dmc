@@ -60,11 +60,6 @@ train.new <- merge(train.new,
                      mutate(time_last =  c(NA, diff(date))),
               by = c("pid", "size","date"))
 
-# Event-variable, needed for survival analysis (1 for all cases)
-train.new$event <- rep(1, NROW(train.new))
-
-# TO DO: Variable giving the days until next purchase (means counter set to zero after purchase of similar product)  
-
 
 ### Category handling
 
