@@ -47,6 +47,13 @@ train.new <- subset(train.new, select = -stock) # this information does not appl
 
 ### Variable generation
 
+# Generate ID for the c(pid, size)-defined products
+train.new$id <- cumsum(!duplicated(train.new[c("pid", "size")]))
+items <- unique(merge(x = items, y = train.new[, c("id", "pid", "size")], by.x = c("pid", "size"), by.y = c("pid", "size")))
+
+
+
+
 # Variable giving the days until purchase from release date
 train.new$time <- round(difftime(strptime(train.new$date, format = "%Y-%m-%d"),
                         strptime(train.new$releaseDate, format = "%Y-%m-%d"),units= "days"),digits = 0)
