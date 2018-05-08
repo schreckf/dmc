@@ -43,12 +43,10 @@ prices <- melt(prices, id.vars = c("pid", "size"))
 colnames(prices)[colnames(prices)=="variable"] <- "date"
 colnames(prices)[colnames(prices)=="value"] <- "price"
 
+train$date <- as.Date(train$date)
 prices$date <- as.Date(prices$date)
 data <- merge(train, prices, by.x = c("date", "pid", "size"), by.y = c("date", "pid", "size"))
 data <- merge(data, items, by=c("pid","size"))
-
-# Add the ID of the products so we don't use two columns at each single operation
-data$ID <- paste(data$pid, "-", data$size)
 
 # Save the progress so far
 ## write.csv(prices, "prices_clean.csv", row.names=F)
@@ -164,8 +162,9 @@ pide$cluster <- pam_fit$clustering
 # items <- cbind(items, cluster = cluster)
 
 
-data <- merge(train, prices, by.x = c("date", "pid", "size"), by.y = c("date", "pid", "size"))
-data <- merge(data, items, by=c("pid","size"))
+data$ID <- paste(data$pid, "-", data$size)
+
+
 data$date <- as.Date(data$date)
 data$releaseDate <- as.Date(data$releaseDate)
 data$daysReleased <- difftime(data$date, data$releaseDate, units = "days")
@@ -177,13 +176,12 @@ data$weekofmonth <- ifelse(day(data$date) %in% 1:7, "1stweek",
                                          ifelse(day(data$date) %in% 22:31, "4thweek", data$date))))
 
 data$month <- month(data$date)
+data$rrp <- as.numeric(data$rrp)
+data$price <- as.numeric(data$price)
+
 data$discount.raise <- 100*(data$rrp - data$price)/data$rrp
 
-data %>% 
-  group_by(pid) %>% 
-  summarise(Frequency = sum(Frequency))
-
-write.csv(data, "data.csv", row.names = F)
+#write.csv(data, "data.csv", row.names = F)
 
 
 ######################################################
@@ -243,7 +241,6 @@ for(i in levels(items$color)){
 #train <- read.csv("train.csv", sep="|")
 #GT_brand <- read.csv("GT_brand.csv")
 #clusters <- read.csv("items_50cluster.csv")
-
 
 
 data$ID <- paste(data$pid, "-", data$size)
