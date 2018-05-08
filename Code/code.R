@@ -79,6 +79,12 @@ train.new <- merge(train.new,
 # Model Building
 #------------------------------------------------------------------
 
+# Splitting train.new-dataset into training and validation data from January on
+sum(as.Date(train.new$date) < "2018-01-01") / NROW(train.new$date) # --> it's a 73/27 split
+training <- train.new[as.Date(train.new$date) < "2018-01-01", ]
+validation <- train.new[as.Date(train.new$date) >= "2018-01-01", ]
+
+
 ### Survival analysis: Cox proportional hazard model 
 source("survival_model.R")
 
