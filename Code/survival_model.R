@@ -8,7 +8,7 @@ training$event <- rep(1, NROW(training))
 training$time <- as.integer(training$time_last)
 
 # Model
-coxmodel <- coxph(Surv(time, event) ~ color + rrp + brand + category, 
+coxmodel <- coxph(Surv(time, event) ~ color + rrp + brand + category + mainCategory + subCategory, 
                   data = training)
 summary(coxmodel)
 
@@ -42,7 +42,7 @@ validation.surv$last.purchase <- as.Date(validation.surv$last.purchase, origin =
 # we delete the new cases since we cant predict them here
 validation.surv[is.na(validation.surv$time_last), ]$last.purchase <- validation.surv[is.na(validation.surv$time_last), ]$releaseDate
 
-# Define cut-off level for prediction (Later crossvalidate!)
+# Define cut-off level for prediction (Later tune!)
 tau <- 0.05
 
 for (x in 1:NROW(prob.surv)) {
@@ -64,12 +64,21 @@ hist(validation.surv$soldOutDate, breaks = 200)
 # Evaluation
 validation.surv$error <- as.integer(abs(difftime(validation.surv$date, validation.surv$soldOutDate, units = "days"))) + 1
 
-avg.error.val <- sum(validation.surv$error[!is.na(validation.surv$error)]) / NROW(!is.na(validation.surv$error)); avg.error.val #  9.418586
+avg.error.val <- sum(validation.surv$error[!is.na(validation.surv$error)]) / NROW(!is.na(validation.surv$error)); avg.error.val 
+
+# Evaluation only for predicted February-cases
+feb.cases <- subset(validation.surv, soldOutDate < "2018-02-01" & soldOutDate > "2017-12-31")
+feb.cases$error <- as.integer(abs(difftime(feb.cases$date, feb.cases$soldOutDate, units = "days"))) + 1
+avg.error.feb.cases <- sum(feb.cases$error[!is.na(feb.cases$error)]) / NROW(!is.na(feb.cases$error)); avg.error.feb.cases 
+
 
 
 # # # # # # # # # # # # 
 
-# Run model again and predict on items dataset
+
+
+
+# Run model again on full train.new-dataset and predict on items dataset
 
 # use all cases from prediction-dataset and test with a stock of 1
 items.surv <- subset(items, stock == 1) 
