@@ -55,16 +55,16 @@ validation.surv$soldOutDate <- validation.surv$last.purchase + validation.surv$p
 # Predicted days outside february?-->how to treat??
 hist(validation.surv$soldOutDate, breaks = 200)
 
-validation.surv$soldOutDate[validation.surv$soldOutDate < "2017-12-25" | validation.surv$soldOutDate > "2018-02-05"] <- "2018-01-15"
+validation.surv$soldOutDate[validation.surv$soldOutDate < "2017-12-25" | validation.surv$soldOutDate > "2018-02-05"] <- "2018-01-16"
 validation.surv$soldOutDate[validation.surv$soldOutDate > "2017-12-25" & validation.surv$soldOutDate < "2018-01-01" ] <- "2018-01-01"
 validation.surv$soldOutDate[validation.surv$soldOutDate > "2018-01-31" & validation.surv$soldOutDate < "2018-02-05"] <- "2018-01-31"
 
 hist(validation.surv$soldOutDate, breaks = 200)
 
 # Evaluation
-validation.surv$error <- as.integer(difftime(validation.surv$date, validation.surv$soldOutDate, units = "days") + 1)
+validation.surv$error <- as.integer(abs(difftime(validation.surv$date, validation.surv$soldOutDate, units = "days"))) + 1
 
-avg.error.val <- sum(validation.surv$error[!is.na(validation.surv$error)]) / NROW(!is.na(validation.surv$error)); avg.error.val #  error of 3.723859
+avg.error.val <- sum(validation.surv$error[!is.na(validation.surv$error)]) / NROW(!is.na(validation.surv$error)); avg.error.val #  9.418586
 
 
 # # # # # # # # # # # # 
