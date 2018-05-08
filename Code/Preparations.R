@@ -51,7 +51,6 @@ data <- merge(data, items, by=c("pid","size"))
 # Save the progress so far
 ## write.csv(prices, "prices_clean.csv", row.names=F)
 ## write.csv(data, "data.csv", row.names=F)
-## read.csv(prices,"prices_clean.csv", row.names=F) 
 
 ############################################################
 ############ 2. Missing Value Imputation: items ############ 
@@ -155,11 +154,11 @@ pide$cluster <- pam_fit$clustering
 ############ 4. Feature engineering using dates ############ 
 ############################################################
 
-# prices <- read.csv("prices_clean.csv")
-# items <- read.csv("items_clean.csv")
-# train <- read.csv("train.csv", sep="|")
-# cluster <- read.csv("items_50cluster.csv")
-# items <- cbind(items, cluster = cluster)
+prices <- read.csv("prices_clean.csv")
+items <- read.csv("items_clean.csv")
+train <- read.csv("train.csv", sep="|")
+cluster <- read.csv("items_50cluster.csv")
+items <- cbind(items, cluster = cluster)
 
 
 data$ID <- paste(data$pid, "-", data$size)
