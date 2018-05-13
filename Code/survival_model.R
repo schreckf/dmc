@@ -4,7 +4,7 @@
 validation.surv <- subset(validation, units == 1) 
 
 # EVTL: Delete cases with releaseDate 2007-10-01
-validation.surv <- subset(validation.surv, validation.surv$releaseDate != "2017-10-01")
+#validation.surv <- subset(validation.surv, validation.surv$releaseDate != "2017-10-01")
 
 # Event-variable and time variable
 training$event <- rep(1, NROW(training))
@@ -70,18 +70,18 @@ hist(validation.surv$soldOutDate, breaks = 200)
 # Evaluation
 validation.surv$error <- as.integer(abs(difftime(validation.surv$date, validation.surv$soldOutDate, units = "days"))) + 1
 
-avg.error.val <- sum(validation.surv$error[!is.na(validation.surv$error)]) / NROW(!is.na(validation.surv$error)); avg.error.val 
+avg.error.val <- sqrt(sum(validation.surv$error[!is.na(validation.surv$error)])) / NROW(!is.na(validation.surv$error)); avg.error.val # 0.03601428 on known releaseDates | 0.01668198 on all releaseDates 
 
 # Evaluation only for predicted January-cases
 jan.cases <- subset(validation.surv, soldOutDate < "2018-02-01" & soldOutDate > "2017-12-31")
 jan.cases$error <- as.integer(abs(difftime(jan.cases$date, jan.cases$soldOutDate, units = "days"))) + 1
-avg.error.jan.cases <- sum(jan.cases$error[!is.na(jan.cases$error)]) / NROW(!is.na(jan.cases$error)); avg.error.jan.cases
+avg.error.jan.cases <- sqrt(sum(jan.cases$error[!is.na(jan.cases$error)])) / NROW(!is.na(jan.cases$error)); avg.error.jan.cases # 0.0900816 | 0.02614358
 
 # Naive model in comparison
 
 validation.surv$soldOutDate <- "2018-01-16"
 validation.surv$error <- as.integer(abs(difftime(validation.surv$date, validation.surv$soldOutDate, units = "days"))) + 1
-avg.error.naive <- sum(validation.surv$error[!is.na(validation.surv$error)]) / NROW(!is.na(validation.surv$error)); avg.error.naive 
+avg.error.naive <- sqrt(sum(validation.surv$error[!is.na(validation.surv$error)])) / NROW(!is.na(validation.surv$error)); avg.error.naive # 0.04938295 | 0.01893069
 
 # # # # # # # # # # # # 
 

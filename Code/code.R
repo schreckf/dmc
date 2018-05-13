@@ -112,7 +112,8 @@ validation <- train.new[as.Date(train.new$date) >= "2018-01-01", ]
 # Naive Model evaluation (We should be better than this)
 validation$pred.naive <- "2018-01-16"
 validation$error <- as.integer(abs(difftime(validation$date, validation$pred.naive, units = "days"))) + 1
-avg.naive.error <- sum(validation$error[!is.na(validation$error)]) / NROW(!is.na(validation$error)); avg.naive.error #  3.480267
+avg.naive.error <- sum(validation$error[!is.na(validation$error)]) / NROW(!is.na(validation$error)); avg.naive.error #  8.81961
+avg.naive.error2 <- sqrt(sum(validation$error[!is.na(validation$error)])) / NROW(!is.na(validation$error)); avg.naive.error2 #  0.01561617
 
 ### Survival analysis: Cox proportional hazard model 
 source("survival_model.R")
