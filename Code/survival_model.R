@@ -160,7 +160,8 @@ table(items.surv$soldOutDate)
 
 
 
-
+# Writing file
+write.csv2(x = items.surv[,c("pid", "size", "soldOutDate")], file = "Uni_HU_Berlin_2", sep = "|")
 
 
 
