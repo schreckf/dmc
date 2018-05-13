@@ -132,18 +132,12 @@ gower_dist <- daisy(pide,
                     metric = "gower",
                     type = list(logratio = 3))
 
-pam_fit <- pam(gower_dist, diss = TRUE, k = 50)
+pam_fit <- pam(gower_dist, diss = TRUE, k = 100)
 
 
-## unique categories when we paste cluster together with the clustered columns:
-# k == 3, 1814 
-# k == 5, 1637 
-# k == 20, 1747 
-# k == 50, 1829 
-# I have chosen k == 50 clusters
 pide$cluster <- pam_fit$clustering
 
-## write.csv(pide$cluster,"items_50cluster.csv", row.names=F) 
+## write.csv(pide$cluster,"items_100cluster.csv", row.names=F) 
 
 ############################################################
 ############ 4. Feature engineering using dates ############ 
@@ -152,7 +146,7 @@ pide$cluster <- pam_fit$clustering
 prices <- read.csv("prices_clean.csv")
 items <- read.csv("items_clean.csv")
 train <- read.csv("train.csv", sep="|")
-cluster <- read.csv("items_50cluster.csv")
+cluster <- read.csv("items_100cluster.csv")
 items <- cbind(items, cluster = cluster)
 
 
