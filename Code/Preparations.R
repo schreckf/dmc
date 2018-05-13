@@ -577,4 +577,8 @@ pid_codes <- substr(training_dataset$pid, start = 1, stop = 2)
 training_dataset <- cbind(training_dataset, pid_codes)
 training_dataset$pid_codes <- as.factor(training_dataset$pid_codes)
 
+# Restore the order back
+training_dataset <- training_dataset[order(training_dataset$ID), ]
+rownames(training_dataset) <- 1:1577352 
 
+#write.csv(training_dataset, "training_dataset.csv", row.names = F)
