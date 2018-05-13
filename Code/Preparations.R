@@ -526,3 +526,55 @@ training_dataset$daysReleased <- ifelse(training_dataset$existence %in% ("no"), 
 #write.csv(target_dataset, "target_dataset.csv", row.names = F)
 #write.csv(training_dataset, "training_dataset.csv", row.names = F)
 
+
+
+
+
+### Additional Features
+## initial_stock: Total stock of products between training days (I also think about extracting monthly averages)
+## It makes more sense (and performs better) to take subsets according to initial_stock instead of stock in February
+initial_stock <- aggregate(x = training_dataset$units, by = list(training_dataset$ID), FUN= sum)
+colnames(initial_stock) <- c("ID","initial_stock")
+training_dataset <- merge(training_dataset, initial_stock, by="ID")
+
+
+## We need new sizes, I grouped them with respect to their total sales
+## Doing this helped a lot in fitting the test set.
+
+size_stock <- aggregate(x = training_dataset$units, by = list(training_dataset$size), FUN= sum)
+colnames(size_stock) <- c("size","size_stock")
+
+
+size_stock$size_cat <- ifelse(size_stock$size_stock >= 1 & size_stock$size_stock < 36, "1",
+                              ifelse(size_stock$size_stock >= 36 & size_stock$size_stock < 71,"2",
+                                     ifelse(size_stock$size_stock >= 71 & size_stock$size_stock < 100,"3",
+                                            ifelse(size_stock$size_stock >= 100 & size_stock$size_stock < 181, "4",
+                                                   ifelse(size_stock$size_stock >= 181 & size_stock$size_stock < 260,"5",
+                                                          ifelse(size_stock$size_stock >= 260 & size_stock$size_stock < 374,"6",
+                                                                 ifelse(size_stock$size_stock >= 374 & size_stock$size_stock < 439,"7",
+                                                                        ifelse(size_stock$size_stock >= 439 & size_stock$size_stock < 539,"8",
+                                                                               ifelse(size_stock$size_stock >= 539 & size_stock$size_stock < 628,"9",
+                                                                                      ifelse(size_stock$size_stock >= 628 & size_stock$size_stock < 1131,"10",
+                                                                                             ifelse(size_stock$size_stock >= 1131 & size_stock$size_stock < 1991,"11",
+                                                                                                    ifelse(size_stock$size_stock >= 1991 & size_stock$size_stock < 3948,"12",
+                                                                                                           ifelse(size_stock$size_stock >= 3948 & size_stock$size_stock < 5858,"13",
+                                                                                                                  ifelse(size_stock$size_stock >= 5858 & size_stock$size_stock < 6930,"14",
+                                                                                                                         ifelse(size_stock$size_stock == 6930,"15",
+                                                                                                                                ifelse(size_stock$size_stock == 11841,"16",
+                                                                                                                                ifelse(size_stock$size_stock == 25812, "17",
+                                                                                                                                ifelse(size_stock$size_stock == 25872, "18",
+                                                                                                                                ifelse(size_stock$size_stock == 68880, "19",
+                                                                                                                     ifelse(size_stock$size_stock == 72594,"20","unknown"))))))))))))))))))))
+###
+size_stock <- size_stock[,-2]
+training_dataset <- merge(training_dataset, size_stock, by = "size")
+
+### Here is the new feature pid_codes. I take the first two characters of the "pid" variable.
+## (I tried almost all combinations and the first two was the best)
+### It increased the predictive power massively
+
+pid_codes <- substr(training_dataset$pid, start = 1, stop = 2)
+training_dataset <- cbind(training_dataset, pid_codes)
+training_dataset$pid_codes <- as.factor(training_dataset$pid_codes)
+
+
