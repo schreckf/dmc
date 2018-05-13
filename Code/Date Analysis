@@ -1,0 +1,31 @@
+setwd("/Users/apple/Documents/Ders dost/Master/2nd Semester/DMC18/DMC_2018_task/")
+library(ggplot2)
+
+training_dataset <- read.csv("training_dataset.csv")
+#target_dataset <- read.csv("target_dataset.csv")
+zalando <- read.csv("zalando.csv")
+
+#### Look at reach_percent! It captures Black Friday.
+
+zalando <- zalando[,c(1,2,6,8)]
+zalando$date <- as.Date(zalando$date)
+zalando_past <- subset(zalando, date >= as.Date("2017/10/01") & date <= as.Date("2018/01/31"))
+
+
+date_units <- aggregate(x = training_dataset$units, by = list(training_dataset$date), FUN= sum)
+colnames(date_units) <- c("date","totalunits_sold")
+
+
+alexa_vs_truth <- cbind(zalando_past, totalunits_sold = date_units$totalunits_sold)
+alexa_vs_truth[,2] <- scale(alexa_vs_truth[,2])
+alexa_vs_truth[,3] <- scale(alexa_vs_truth[,3])
+alexa_vs_truth[,4] <- scale(alexa_vs_truth[,4])
+alexa_vs_truth[,5] <- scale(alexa_vs_truth[,5])
+
+ggplot(alexa_vs_truth, aes(x = date)) +
+  stat_summary(aes(y = web_traffic), colour = "blue", fun.y = sum, geom = "line") +
+  stat_summary(aes(y = reach_percent), colour = "black", fun.y = sum, geom = "line") +
+  stat_summary(aes(y = totalunits_sold), colour = "red", fun.y = sum, geom = "line") +
+  stat_summary(aes(y = GT_zalando_schuhe), colour = "green", fun.y = sum, geom = "line") +
+  labs(x = "date", y = "sales") + 
+  scale_color_manual(labels = c("web_traffic","totalunits_sold","GT_zalando_schuhe"), values = c("blue", "red","green"))
