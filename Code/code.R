@@ -42,10 +42,6 @@ train.new <- subset(train.new, select = -stock) # this information does not appl
 # Feature Engineering
 #------------------------------------------------------------------
 
-### Variable fixing
-
-
-### Variable generation
 
 # Generate ID for the c(pid, size)-defined products
 train.new$id <- cumsum(!duplicated(train.new[c("pid", "size")]))
@@ -66,8 +62,36 @@ train.new <- merge(train.new,
                      mutate(time_last =  c(NA, diff(date))),
               by = c("pid", "size","date"))
 
+# Generate variable indicating releaseDate 2007-10-01
+#train.new$releaseIndicator <- ifelse(is.na(train.new$time_last), 1, 0)
 
-### Category handling
+#train.new$time_last[is.na(train.new$time_last)] <- difftime(train.new$date[is.na(train.new$time_last)], train.new$releaseDate[is.na(train.new$time_last)], units = "days")
+#train.new$time_last <- as.integer(train.new$time_last)
+
+
+# Add average price
+avg.price <- apply(prices[-c(1,2)], 1, function(x) mean(x))
+prices$avg.price <- avg.price
+prices.subset <- prices[, c("pid", "size", "avg.price")]
+
+train.new <- merge(x = train.new, y=prices.subset, by.x = c("pid", "size"), by.y = c("pid", "size"))
+
+# Predict prices to impute NAs
+linear.price.model <- lm(formula = avg.price ~ subCategory + category + mainCategory + rrp + color + 
+                          brand , data = train.new[!is.na(train.new$avg.price),])
+summary(linear.price.model)
+
+p.prices <- predict(object = linear.price.model, newdata = train.new[is.na(train.new$avg.price),])
+train.new[is.na(train.new$avg.price),]$avg.price <- p.prices
+
+items <- unique(merge(x = items, y=train.new[, c("pid", "size", "avg.price")], by.x = c("pid", "size"), by.y = c("pid", "size")))
+
+# Calculate discount
+
+train.new$discount.raise <- 100*(train.new$rrp - train.new$avg.price)/train.new$rrp
+items$discount.raise <- 100*(items$rrp - items$avg.price)/items$rrp
+
+
 
 
 #------------------------------------------------------------------

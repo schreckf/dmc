@@ -3,44 +3,49 @@
 # use all cases from prediction-dataset and test with 1 unit
 validation.surv <- subset(validation, units == 1) 
 
+# EVTL: Delete cases with releaseDate 2007-10-01
+validation.surv <- subset(validation.surv, validation.surv$releaseDate != "2017-10-01")
+
 # Event-variable and time variable
 training$event <- rep(1, NROW(training))
 training$time <- as.integer(training$time_last)
 
 # Model
-coxmodel <- coxph(Surv(time, event) ~ color + rrp + brand + category + mainCategory + subCategory, 
-                  data = training)
-summary(coxmodel)
+coxmodel1 <- coxph(Surv(time, event) ~ size + color + rrp + brand + category + mainCategory + subCategory +
+                    avg.price + discount.raise, data = training)
+summary(coxmodel1)
 
 # Plotting
-plot(survfit(coxmodel, type = "aalen"), xlab = "Time", ylab = "Survival Probability")
-plot(survfit(Surv(time, event) ~ color, data = training), xlab = "Time",
-     ylab = "Survival Probability", col = training$color) # exemplary plot depending on color-variable
+#plot(survfit(coxmodel2, type = "aalen"), xlab = "Time", ylab = "Survival Probability")
+#plot(survfit(Surv(time, event) ~ color, data = training), xlab = "Time",
+#     ylab = "Survival Probability", col = training$color) # exemplary plot depending on color-variable
 
 
 # Prediction (using package pec)
 # Extract predicted survival probabilities 
 # at selected time-points
 time.points <- c(1:150)
-prob.surv <- predictSurvProb(object = coxmodel, newdata = validation.surv, times = time.points)
+prob.surv <- predictSurvProb(object = coxmodel1, newdata = validation.surv, times = time.points)
 head(prob.surv)
 # Problem: no prediction over future timepoints (>122) that did not occur in training data. 
 
 
 # Adding the predictions for new data to the plot
-lines(survfit(coxmodel, newdata=validation.surv))
+#lines(survfit(coxmodel2, newdata=validation.surv))
 
 # In order to get a predicted date, we need to merge the last purchase of each product in
 # the train-data with the items-data. Then we can add the predicted days until next purchase on that
 
 for (i in unique(validation.surv$id)) {
-  validation.surv$last.purchase[validation.surv$id == i] <- max(as.Date(training[training$id == i,]$date))
-}
+  validation.surv$last.purchase[validation.surv$id == i] <- max(as.Date(training$date[training$id == i]))
+} # warning can be ignored (just some ids from validation data never occured in training data)
 
 validation.surv$last.purchase <- as.Date(validation.surv$last.purchase, origin = "1970-01-01")
 
 # we delete the new cases since we cant predict them here
 validation.surv[is.na(validation.surv$time_last), ]$last.purchase <- validation.surv[is.na(validation.surv$time_last), ]$releaseDate
+
+
 
 # Define cut-off level for prediction (Later tune!)
 tau <- 0.05
@@ -55,7 +60,8 @@ validation.surv$soldOutDate <- validation.surv$last.purchase + validation.surv$p
 # Predicted days outside february?-->how to treat??
 hist(validation.surv$soldOutDate, breaks = 200)
 
-validation.surv$soldOutDate[validation.surv$soldOutDate < "2017-12-25" | validation.surv$soldOutDate > "2018-02-05"] <- "2018-01-16"
+#validation.surv$soldOutDate[validation.surv$soldOutDate < "2017-12-25" | validation.surv$soldOutDate > "2018-02-05"] <- "2018-01-16"
+validation.surv$soldOutDate[validation.surv$soldOutDate <= "2017-12-25" | validation.surv$soldOutDate >= "2018-02-05"] <- NA
 validation.surv$soldOutDate[validation.surv$soldOutDate > "2017-12-25" & validation.surv$soldOutDate < "2018-01-01" ] <- "2018-01-01"
 validation.surv$soldOutDate[validation.surv$soldOutDate > "2018-01-31" & validation.surv$soldOutDate < "2018-02-05"] <- "2018-01-31"
 
@@ -66,12 +72,16 @@ validation.surv$error <- as.integer(abs(difftime(validation.surv$date, validatio
 
 avg.error.val <- sum(validation.surv$error[!is.na(validation.surv$error)]) / NROW(!is.na(validation.surv$error)); avg.error.val 
 
-# Evaluation only for predicted February-cases
-feb.cases <- subset(validation.surv, soldOutDate < "2018-02-01" & soldOutDate > "2017-12-31")
-feb.cases$error <- as.integer(abs(difftime(feb.cases$date, feb.cases$soldOutDate, units = "days"))) + 1
-avg.error.feb.cases <- sum(feb.cases$error[!is.na(feb.cases$error)]) / NROW(!is.na(feb.cases$error)); avg.error.feb.cases 
+# Evaluation only for predicted January-cases
+jan.cases <- subset(validation.surv, soldOutDate < "2018-02-01" & soldOutDate > "2017-12-31")
+jan.cases$error <- as.integer(abs(difftime(jan.cases$date, jan.cases$soldOutDate, units = "days"))) + 1
+avg.error.jan.cases <- sum(jan.cases$error[!is.na(jan.cases$error)]) / NROW(!is.na(jan.cases$error)); avg.error.jan.cases
 
+# Naive model in comparison
 
+validation.surv$soldOutDate <- "2018-01-16"
+validation.surv$error <- as.integer(abs(difftime(validation.surv$date, validation.surv$soldOutDate, units = "days"))) + 1
+avg.error.naive <- sum(validation.surv$error[!is.na(validation.surv$error)]) / NROW(!is.na(validation.surv$error)); avg.error.naive 
 
 # # # # # # # # # # # # 
 
@@ -82,34 +92,37 @@ avg.error.feb.cases <- sum(feb.cases$error[!is.na(feb.cases$error)]) / NROW(!is.
 
 # use all cases from prediction-dataset and test with a stock of 1
 items.surv <- subset(items, stock == 1) 
+NROW(items.surv) # 7616 cases
 
+# EVTL: Delete cases with releaseDate 2007-10-01
+#items.surv <- subset(items.surv, items.surv$releaseDate != "2017-10-01") # only 1019 cases after that
 
 # Event-variable and time variable
 train.new$event <- rep(1, NROW(train.new))
 train.new$time <- as.integer(train.new$time_last)
 
 # Model
-coxmodel <- coxph(Surv(time, event) ~ color + rrp + brand + category, 
-                  data = train.new)
-summary(coxmodel)
+coxmodel2 <- coxph(Surv(time, event) ~ size + color + rrp + brand + category + mainCategory + subCategory +
+                    avg.price + discount.raise, data = train.new)
+summary(coxmodel2)
 
 # Plotting
-plot(survfit(coxmodel, type = "aalen"), xlab = "Time", ylab = "Survival Probability")
+plot(survfit(coxmodel2, type = "aalen"), xlab = "Time", ylab = "Survival Probability")
 plot(survfit(Surv(time, event) ~ color, data = train.new), xlab = "Time",
      ylab = "Survival Probability", col = train.new$color) # exemplary plot depending on color-variable
 
 
-# Prediction (using package pec)
+# Prediction
 # Extract predicted survival probabilities 
 # at selected time-points
 time.points <- c(1:150)
-prob.surv <- predictSurvProb(object = coxmodel, newdata = items.surv, times = time.points)
+prob.surv <- predictSurvProb(object = coxmodel2, newdata = items.surv, times = time.points)
 head(prob.surv)
 # Problem: no prediction over future timepoints (>122) that did not occur in training data. 
 
 
 # Adding the predictions for new data to the plot
-lines(survfit(coxmodel, newdata=items))
+lines(survfit(coxmodel2, newdata=items))
 
 # In order to get a predicted date, we need to merge the last purchase of each product in
 # the train-data with the items-data. Then we can add the predicted days until next purchase on that
@@ -117,6 +130,9 @@ lines(survfit(coxmodel, newdata=items))
 for (i in unique(items.surv$id)) {
   items.surv$last.purchase[items.surv$id == i] <- max(as.Date(train.new[train.new$id == i,]$date))
 }
+
+items.surv$last.purchase <- as.Date(items.surv$last.purchase, origin = "1970-01-01")
+
 
 # Define cut-off level for prediction (Later crossvalidate!)
 tau <- 0.05
@@ -128,11 +144,19 @@ for (x in 1:NROW(prob.surv)) {
 items.surv$soldOutDate <- as.Date(items.surv$last.purchase + items.surv$pred.days, origin = "1970-01-01")
 
 
+
 ### Predicted days outside february? --> How to treat these??
 hist(items.surv$soldOutDate, breaks = 200)
 
 
+#validation.surv$soldOutDate[validation.surv$soldOutDate < "2017-12-25" | validation.surv$soldOutDate > "2018-02-05"] <- "2018-01-16"
+items.surv$soldOutDate[items.surv$soldOutDate <= "2018-01-25" | items.surv$soldOutDate >= "2018-03-05"] <- NA
+items.surv$soldOutDate[items.surv$soldOutDate > "2018-01-25" & items.surv$soldOutDate < "2018-02-01" ] <- "2018-02-01"
+items.surv$soldOutDate[items.surv$soldOutDate > "2018-02-31" & items.surv$soldOutDate < "2018-03-05"] <- "2018-02-31" # ???
 
+sum(!is.na(items.surv$soldOutDate)) # This is effective the number of predictions in the end
+hist(items.surv$soldOutDate, breaks = 200)
+table(items.surv$soldOutDate)
 
 
 
