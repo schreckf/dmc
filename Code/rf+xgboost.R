@@ -42,14 +42,16 @@ for(i in date_vector){
 partition$date <- as.Date(partition$date)
 
 
-## Select columns from the main training_dataset and select those which exists
+## Select columns
 selected <- partition[,c("color","reach_percent","pid_codes","pid","daysReleased","weekofmonth","date","ID", 
                          "brand","size", "initial_stock", "GT_score","discount.raise","price","weekdays", 
                          "weekend", "existence","units","sold_or_not", "size_cat")]
 
-#Take products that exist at a particular date
+# Take products that exist at a particular date
 selected <- subset(selected, selected$existence == "yes")
-#Standardize numerics
+
+# Standardize numerics except units (because it causes a problem to xgboost when predicting 0)
+
 original_stock <- selected$initial_stock
 
 selected$units <- as.character(selected$units)
@@ -60,7 +62,7 @@ for(i in colnames(selected)){
 }
 selected$units <- as.numeric(selected$units)
 
-#Choose 10 products for simplicity
+# Choose 10 products for simplicity
 set.seed(12)
 place <- sample(1:length(unique(selected$pid)),20)
 products <- unique(selected$pid)[place]
@@ -70,7 +72,7 @@ complete_selection <- subset(selected, pid %in% products)
 train <- subset(complete_selection, date <= as.Date("2017-12-31"))
 test <- subset(complete_selection, date > as.Date("2017-12-31"))
 
-## Remove pid, date, ID,size, existence
+## Remove pid, date, ID,size, existence etc.
 train <- train[order(train$date), ]
 test <- test[order(test$date), ]
 train_wo_id <- train[,!colnames(train) %in% c("pid","stock","date","size","ID","existence")]
@@ -90,13 +92,14 @@ ts <- as.data.frame(predict(encoder_test, test_wo_id))
 colnames(ts) <- make.names(colnames(ts))
 
 # During this part, we predict whether it is sold_or_not,
-# Therefore I take units out, temporarily
+# Therefore I take units out, temporarily.
 
 units_tr <- tr[,"units"]
 units_ts <- ts[,"units"]
 
 tr_wo_units <- tr[,!colnames(tr) %in% "units"]
 ts_wo_units <- ts[,!colnames(ts) %in% "units"]
+
 tr_wo_units$sold_or_not_1 <- as.factor(tr_wo_units$sold_or_not_1)
 ts_wo_units$sold_or_not_1 <- as.factor(ts_wo_units$sold_or_not_1)
 
@@ -135,7 +138,7 @@ yhat[["rf"]] <- predict(modelLib[["rf"]], newdata = ts_wo_units)
 auc[["rf"]] <- mlr::performance(yhat[["rf"]], measures = mlr::auc)
 
 
-# Replace prediction with true value in the test set,
+# Replace true value with prediction in the test set,
 # in order to go on with predicting units
 
 ts <- cbind(ts, pred_sold = yhat[["rf"]]$data[,4])
@@ -162,6 +165,7 @@ xgboost.parms <- makeParamSet(
   makeDiscreteParam("min_child_weight", values = 1),
   makeDiscreteParam("subsample", values = 0.8)
 ) 
+
 ctrl = makeTuneControlGrid()
 rdesc = makeResampleDesc("CV", iters = 3L)
 res = tuneParams("regr.xgboost", task = task.xgb, resampling = rdesc,
@@ -177,7 +181,7 @@ ts_predicted <- cbind(ts, response = pred[["data"]][,2])
 ts_predicted <- cbind(ID = test$ID, pid = test$pid, date = test$date,size = test$size, ts_predicted)
 
 #Take a look at individual products
-analysis <- ts_predicted[,c("ID","date","pid","size","units","sold_or_not.1","response")]
+analysis <- ts_predicted[,c("ID","date","pid","size","units","sold_or_not_1","response")]
 
 unique(analysis$ID)
 
