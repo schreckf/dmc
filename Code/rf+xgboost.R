@@ -10,7 +10,7 @@ training_dataset <- read.csv("training_dataset.csv")
 working_subset <- subset(training_dataset, stock > 1 & stock <= 100)
 summary(working_subset$initial_stock)
 
-# subset the products which have too much initial stock
+# subset the products with many initial_stock
 e <- subset(working_subset,initial_stock > 34)
 partition <- e
 
