@@ -1,4 +1,5 @@
-setwd("/Users/apple/Documents/Ders dost/Master/2nd Semester/DMC18/DMC_2018_task/")
+library(rstudioapi)
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 library(caret)
 library(mlr)
