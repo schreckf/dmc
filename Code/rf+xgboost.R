@@ -142,7 +142,7 @@ auc[["rf"]] <- mlr::performance(yhat[["rf"]], measures = mlr::auc)
 # in order to go on with predicting units
 
 ts <- cbind(ts, pred_sold = yhat[["rf"]]$data[,4])
-ts$sold_or_not.1 <- ts$pred_sold
+ts$sold_or_not_1 <- ts$pred_sold
 ts <- ts[,!colnames(ts) %in% "pred_sold"]
 
 #############
