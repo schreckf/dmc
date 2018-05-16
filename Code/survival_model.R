@@ -57,13 +57,19 @@ for (x in 1:NROW(prob.surv)) {
 validation.surv$soldOutDate <- validation.surv$last.purchase + validation.surv$pred.days
 
 
-# Predicted days outside february?-->how to treat??
+# Predicted days outside January?-->how to treat??
 hist(validation.surv$soldOutDate, breaks = 200)
 
 #validation.surv$soldOutDate[validation.surv$soldOutDate < "2017-12-25" | validation.surv$soldOutDate > "2018-02-05"] <- "2018-01-16"
 validation.surv$soldOutDate[validation.surv$soldOutDate <= "2017-12-25" | validation.surv$soldOutDate >= "2018-02-05"] <- NA
-validation.surv$soldOutDate[validation.surv$soldOutDate > "2017-12-25" & validation.surv$soldOutDate < "2018-01-01" ] <- "2018-01-01"
-validation.surv$soldOutDate[validation.surv$soldOutDate > "2018-01-31" & validation.surv$soldOutDate < "2018-02-05"] <- "2018-01-31"
+validation.surv$soldOutDate[validation.surv$soldOutDate > "2017-12-25" & validation.surv$soldOutDate < "2018-01-01" & !is.na(validation.surv$soldOutDate)] <- "2018-01-01"
+validation.surv$soldOutDate[validation.surv$soldOutDate > "2018-01-31" & validation.surv$soldOutDate < "2018-02-05" & !is.na(validation.surv$soldOutDate)] <- "2018-01-31"
+
+# or (test)
+#validation.surv$soldOutDate[validation.surv$soldOutDate <= "2017-12-25" | validation.surv$soldOutDate >= "2018-02-05"] <- NA
+#validation.surv <- validation.surv[!is.na(validation.surv$soldOutDate),]
+#validation.surv$soldOutDate[validation.surv$soldOutDate > "2017-12-25" & validation.surv$soldOutDate < "2018-01-01" ] <- "2018-01-01"
+#validation.surv$soldOutDate[validation.surv$soldOutDate > "2018-01-31" & validation.surv$soldOutDate < "2018-02-05"] <- "2018-01-31"
 
 hist(validation.surv$soldOutDate, breaks = 200)
 
@@ -151,8 +157,9 @@ hist(items.surv$soldOutDate, breaks = 200)
 
 #validation.surv$soldOutDate[validation.surv$soldOutDate < "2017-12-25" | validation.surv$soldOutDate > "2018-02-05"] <- "2018-01-16"
 items.surv$soldOutDate[items.surv$soldOutDate <= "2018-01-25" | items.surv$soldOutDate >= "2018-03-05"] <- NA
-items.surv$soldOutDate[items.surv$soldOutDate > "2018-01-25" & items.surv$soldOutDate < "2018-02-01" ] <- "2018-02-01"
-items.surv$soldOutDate[items.surv$soldOutDate > "2018-02-31" & items.surv$soldOutDate < "2018-03-05"] <- "2018-02-31" # ???
+items.surv$soldOutDate[items.surv$soldOutDate > "2018-01-25" & items.surv$soldOutDate < "2018-02-01" & !is.na(items.surv$soldOutDate)] <- "2018-02-01"
+items.surv$soldOutDate[items.surv$soldOutDate > "2018-02-28" & items.surv$soldOutDate < "2018-03-05" & !is.na(items.surv$soldOutDate)] <- "2018-02-28" 
+
 
 sum(!is.na(items.surv$soldOutDate)) # This is effective the number of predictions in the end
 hist(items.surv$soldOutDate, breaks = 200)
@@ -163,6 +170,12 @@ table(items.surv$soldOutDate)
 # Writing file
 write.csv2(x = items.surv[,c("pid", "size", "soldOutDate")], file = "Uni_HU_Berlin_2", sep = "|")
 
+
+# Not predictable stock = 1 cases
+#not.pred <- items.surv[is.na(items.surv$soldOutDate), c("pid", "size")]
+#pred <- items.surv[!is.na(items.surv$soldOutDate), c("pid", "size")]
+#write.csv2(x = not.pred, file = "survival.not.pred")
+#write.csv2(x = pred, file = "survival.pred")
 
 
 
