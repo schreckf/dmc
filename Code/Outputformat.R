@@ -44,11 +44,20 @@ prediction$true_dates <- ifelse(prediction$csum_truth_sellout == 1 & prediction$
 prediction$response_dates <- ifelse(prediction$csum_response_sellout == 1 & prediction$response_sellout == 1
                                       ,prediction$date,NA)
 
-#prediction$response_leftout <- as.numeric(prediction$stock_JAN - prediction$csum_response) 
 prediction$response_dates <- ifelse(prediction$date == "2018-01-31" & prediction$csum_response_sellout == 0,
-                                    "2018-01-31",prediction$response_dates)
+                                    "temp",prediction$response_dates)
+
+# It assigns values at places where it is not temp (I don't know why), but the next line solves the issue;
+prediction$response_dates_dec <- ifelse(prediction$response_dates == "temp" & prediction$csum_response < prediction$stock_JAN/2,
+                                    "2018-01-16","2018-01-31")
+prediction$response_dates <- ifelse(prediction$response_dates == "temp",
+                                    prediction$response_dates_dec,prediction$response_dates)
+
 prediction$true_dates <- ifelse(prediction$date == "2018-01-31" & prediction$csum_truth_sellout == 0,
                                     "2018-01-31",prediction$true_dates)
+
+
+
 
 true <- subset(prediction, !is.na(prediction$true_dates), select = c("ID","pid","size","true_dates"))
 response <- subset(prediction, !is.na(prediction$response_dates), select = c("ID","pid","size","response_dates"))
