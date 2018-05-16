@@ -199,7 +199,7 @@ items.surv$last.purchase <- as.Date(items.surv$last.purchase, origin = "1970-01-
 
 
 # Define tuned cut-off level for prediction 
-tau <- 0.05 # use tuned tau from above
+tau <- 0.06 # use tuned tau from above
 
 for (x in 1:NROW(prob.surv)) {
   items.surv$pred.days[x] <- which(prob.surv[x,] < tau)[1]
@@ -214,9 +214,9 @@ hist(items.surv$soldOutDate, breaks = 200)
 
 # Use tuned days here!!
 #validation.surv$soldOutDate[validation.surv$soldOutDate < "2017-12-25" | validation.surv$soldOutDate > "2018-02-05"] <- "2018-01-16"
-items.surv$soldOutDate[items.surv$soldOutDate <= "2018-01-25" | items.surv$soldOutDate >= "2018-03-05"] <- NA
-items.surv$soldOutDate[items.surv$soldOutDate > "2018-01-25" & items.surv$soldOutDate < "2018-02-01" & !is.na(items.surv$soldOutDate)] <- items.surv$soldOutDate[items.surv$soldOutDate > "2018-01-25" & items.surv$soldOutDate < "2018-02-01" & !is.na(items.surv$soldOutDate)] + 7
-items.surv$soldOutDate[items.surv$soldOutDate > "2018-02-28" & items.surv$soldOutDate < "2018-03-05" & !is.na(items.surv$soldOutDate)] <- items.surv$soldOutDate[items.surv$soldOutDate > "2018-02-28" & items.surv$soldOutDate < "2018-03-05" & !is.na(items.surv$soldOutDate)] - 5
+items.surv$soldOutDate[items.surv$soldOutDate <= "2018-01-31" | items.surv$soldOutDate >= "2018-03-01"] <- NA
+#items.surv$soldOutDate[items.surv$soldOutDate > "2018-01-25" & items.surv$soldOutDate < "2018-02-01" & !is.na(items.surv$soldOutDate)] <- items.surv$soldOutDate[items.surv$soldOutDate > "2018-01-25" & items.surv$soldOutDate < "2018-02-01" & !is.na(items.surv$soldOutDate)] + 7
+#items.surv$soldOutDate[items.surv$soldOutDate > "2018-02-28" & items.surv$soldOutDate < "2018-03-05" & !is.na(items.surv$soldOutDate)] <- items.surv$soldOutDate[items.surv$soldOutDate > "2018-02-28" & items.surv$soldOutDate < "2018-03-05" & !is.na(items.surv$soldOutDate)] - 5
 
 
 sum(!is.na(items.surv$soldOutDate)) # This is effective the number of predictions in the end
