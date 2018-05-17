@@ -70,7 +70,7 @@ train.new <- merge(train.new,
 
 
 # Add average price
-avg.price <- apply(prices[-c(1,2)], 1, function(x) mean(x))
+avg.price <- apply(prices[-c(1,2)], 1, function(x) mean(x, na.rm = TRUE)) # [na.rm not used in hand-in-prediction] 
 prices$avg.price <- avg.price
 prices.subset <- prices[, c("pid", "size", "avg.price")]
 
@@ -83,6 +83,8 @@ summary(linear.price.model)
 
 p.prices <- predict(object = linear.price.model, newdata = train.new[is.na(train.new$avg.price),])
 train.new[is.na(train.new$avg.price),]$avg.price <- p.prices
+# Change negatively predicted prices to rrp [not used in hand-in-prediction]
+train.new$avg.price[train.new$avg.price < 0 & !is.na(train.new$avg.price)] <- train.new$rrp[train.new$avg.price < 0 & !is.na(train.new$avg.price)]
 
 items <- unique(merge(x = items, y=train.new[, c("pid", "size", "avg.price")], by.x = c("pid", "size"), by.y = c("pid", "size")))
 

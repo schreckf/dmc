@@ -62,7 +62,7 @@ for (tau in c(0.005, 0.01, 0.02,  0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1,
         
         validation.surv$soldOutDate[validation.surv$soldOutDate <= "2017-12-31" | validation.surv$soldOutDate >= "2018-02-01"] <- NA
        
-        validation.surv$error <- as.integer(abs(difftime(validation.surv$date, validation.surv$soldOutDate, units = "days"))) + 1
+        validation.surv$error <- as.integer(round(abs(difftime(validation.surv$date, validation.surv$soldOutDate, units = "days")))) 
         avg.error.val <- sqrt(sum(validation.surv$error[!is.na(validation.surv$error)])) / sum(!is.na(validation.surv$error))
         
         #hist(validation.surv$soldOutDate, breaks = 200)
@@ -70,7 +70,7 @@ for (tau in c(0.005, 0.01, 0.02,  0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1,
         
         # Naive model in comparison
         validation.surv$soldOutDate[!is.na(validation.surv$soldOutDate)] <- "2018-01-16"
-        validation.surv$error <- as.integer(abs(difftime(validation.surv$date, validation.surv$soldOutDate, units = "days"))) + 1
+        validation.surv$error <- as.integer(round(abs(difftime(validation.surv$date, validation.surv$soldOutDate, units = "days")))) 
         avg.error.naive <- sqrt(sum(validation.surv$error[!is.na(validation.surv$error)])) / sum(!is.na(validation.surv$error)) 
         
         print(c("error: ", avg.error.val, "naive error: ", avg.error.naive, "difference: ", (avg.error.val - avg.error.naive)))
@@ -85,12 +85,12 @@ for (tau in c(0.005, 0.01, 0.02,  0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1,
         validation.surv$soldOutDate[validation.surv$soldOutDate > "2017-12-28" & validation.surv$soldOutDate < "2018-01-01" & !is.na(validation.surv$soldOutDate)] <- "2018-01-01"
         validation.surv$soldOutDate[validation.surv$soldOutDate > "2018-01-31" & validation.surv$soldOutDate < "2018-02-03" & !is.na(validation.surv$soldOutDate)] <- "2018-01-31"
         
-        validation.surv$error <- as.integer(abs(difftime(validation.surv$date, validation.surv$soldOutDate, units = "days"))) + 1
+        validation.surv$error <- as.integer(round(abs(difftime(validation.surv$date, validation.surv$soldOutDate, units = "days")))) 
         avg.error.val <- sqrt(sum(validation.surv$error[!is.na(validation.surv$error)])) / sum(!is.na(validation.surv$error))
         
         # Naive model in comparison
         validation.surv$soldOutDate[!is.na(validation.surv$soldOutDate)] <- "2018-01-16"
-        validation.surv$error <- as.integer(abs(difftime(validation.surv$date, validation.surv$soldOutDate, units = "days"))) + 1
+        validation.surv$error <-as.integer(round(abs(difftime(validation.surv$date, validation.surv$soldOutDate, units = "days")))) 
         avg.error.naive <- sqrt(sum(validation.surv$error[!is.na(validation.surv$error)])) / sum(!is.na(validation.surv$error)) 
         
         print(c("error: ", avg.error.val, "naive error: ", avg.error.naive, "difference: ", (avg.error.val - avg.error.naive)))
@@ -105,12 +105,12 @@ for (tau in c(0.005, 0.01, 0.02,  0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1,
         validation.surv$soldOutDate[validation.surv$soldOutDate > "2017-12-25" & validation.surv$soldOutDate < "2018-01-01" & !is.na(validation.surv$soldOutDate)] <- "2018-01-01"
         validation.surv$soldOutDate[validation.surv$soldOutDate > "2018-01-31" & validation.surv$soldOutDate < "2018-02-05" & !is.na(validation.surv$soldOutDate)] <- "2018-01-31"
         
-        validation.surv$error <- as.integer(abs(difftime(validation.surv$date, validation.surv$soldOutDate, units = "days"))) + 1
+        validation.surv$error <- as.integer(round(abs(difftime(validation.surv$date, validation.surv$soldOutDate, units = "days")))) 
         avg.error.val <- sqrt(sum(validation.surv$error[!is.na(validation.surv$error)])) /sum(!is.na(validation.surv$error))
         
         # Naive model in comparison
         validation.surv$soldOutDate[!is.na(validation.surv$soldOutDate)] <- "2018-01-16"
-        validation.surv$error <- as.integer(abs(difftime(validation.surv$date, validation.surv$soldOutDate, units = "days"))) + 1
+        validation.surv$error <- as.integer(round(abs(difftime(validation.surv$date, validation.surv$soldOutDate, units = "days")))) 
         avg.error.naive <- sqrt(sum(validation.surv$error[!is.na(validation.surv$error)])) / sum(!is.na(validation.surv$error)) 
         
         print(c("error: ", avg.error.val, "naive error: ", avg.error.naive, "difference: ", (avg.error.val - avg.error.naive)))
@@ -129,12 +129,12 @@ for (tau in c(0.005, 0.01, 0.02,  0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1,
         #hist(validation.surv$soldOutDate, breaks = 200)
         
         # Evaluation
-        validation.surv$error <- as.integer(abs(difftime(validation.surv$date, validation.surv$soldOutDate, units = "days"))) + 1
+        validation.surv$error <- as.integer(round(abs(difftime(validation.surv$date, validation.surv$soldOutDate, units = "days")))) 
         avg.error.val <- sqrt(sum(validation.surv$error[!is.na(validation.surv$error)])) / sum(!is.na(validation.surv$error)) # 0.03601428 on known releaseDates | 0.01668198 on all releaseDates 
         
         # Naive model in comparison
         validation.surv$soldOutDate[!is.na(validation.surv$soldOutDate)] <- "2018-01-16"
-        validation.surv$error <- as.integer(abs(difftime(validation.surv$date, validation.surv$soldOutDate, units = "days"))) + 1
+        validation.surv$error <- as.integer(round(abs(difftime(validation.surv$date, validation.surv$soldOutDate, units = "days")))) 
         avg.error.naive <- sqrt(sum(validation.surv$error[!is.na(validation.surv$error)])) / sum(!is.na(validation.surv$error)) 
         
         print(c("error: ", avg.error.val, "naive error: ", avg.error.naive, "difference: ", (avg.error.val - avg.error.naive)))
@@ -143,7 +143,7 @@ for (tau in c(0.005, 0.01, 0.02,  0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1,
 
 # Evaluation only for predicted January-cases
 jan.cases <- subset(validation.surv, soldOutDate < "2018-02-01" & soldOutDate > "2017-12-31")
-jan.cases$error <- as.integer(abs(difftime(jan.cases$date, jan.cases$soldOutDate, units = "days"))) + 1
+jan.cases$error <- as.integer(round(abs(difftime(validation.surv$date, validation.surv$soldOutDate, units = "days"))))
 avg.error.jan.cases <- sqrt(sum(jan.cases$error[!is.na(jan.cases$error)])) / NROW(!is.na(jan.cases$error)); avg.error.jan.cases # 0.0900816 | 0.02614358
 
 
